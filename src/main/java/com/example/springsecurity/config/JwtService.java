@@ -1,11 +1,15 @@
 package com.example.springsecurity.config;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.impl.DefaultClaims;
+import io.jsonwebtoken.impl.DefaultJwsHeader;
+import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
 import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -21,22 +25,44 @@ import java.util.function.Function;
  * created in 1/27/2023 3:36 PM
  */
 @Component
+@Slf4j
 public class JwtService {
     public static final String SECRET = "7134743777217A24432646294A404E635266556A586E3272357538782F413F44";
 
-    public String generateToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+    public static final Integer EXPIRE_DURATION = 1000 * 60 * 30; // 30 minutes
+    // defaut header
+    private Header getHeader() {
+        JwsHeader header = new DefaultJwsHeader();
+        header.setType("JWT");
+        header.setAlgorithm("HS256");
+        return header;
     }
 
-    private String createToken(Map<String, Object> claims, String username) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000*60*30))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
+    // payload
+    private Claims  setPayload(String username) {
+        Claims claims = new DefaultClaims();
+        claims.setIssuer(username);
+        claims.setSubject(username);
+        claims.setIssuedAt(new Date(System.currentTimeMillis()));
+        claims.setExpiration(new Date(System.currentTimeMillis() + EXPIRE_DURATION));
+        return claims;
     }
+
+    // signature
+    public String generateToken(String username) {
+        log.info("generate jwt ...");
+        Header header = getHeader();
+        Claims payload = setPayload(username);
+        return createToken(header, payload);
+    }
+
+    private String createToken(Header headder, Claims payload) {
+        return Jwts.builder()
+                .setHeader((Map<String, Object>)headder) // header
+                .setClaims(payload) // payload
+                .signWith(getSignKey()).compact(); // signature (algo was set in header)
+    }
+
 
     private Key getSignKey() {
         byte [] keyByte = Decoders.BASE64.decode(SECRET);
@@ -52,6 +78,12 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
+//    @Autowired
+//    public CompressionCodecResolver getAlgorithms() {
+//        return new DefaultCompressionCodecResolver();
+//    }
+
+    // phan tich token
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()

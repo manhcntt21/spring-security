@@ -2,9 +2,7 @@ package com.example.springsecurity.controllers;
 
 import com.example.springsecurity.request.AuthRequest;
 import com.example.springsecurity.config.JwtService;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,10 +18,16 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 public class AuthController {
-    @Autowired
+
     private JwtService jwtService;
-    @Autowired
+
     private AuthenticationManager authenticationManager;
+
+    public AuthController(JwtService jwtService, AuthenticationManager authenticationManager) {
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
+
     @PostMapping()
     public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
         log.info("authentication starting");

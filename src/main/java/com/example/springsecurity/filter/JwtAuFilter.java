@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +23,7 @@ import java.io.IOException;
  * created in 1/5/2023 10:26 PM
  */
 @Component
+@Slf4j
 public class JwtAuFilter extends OncePerRequestFilter {
     @Autowired
     private  JwtService jwtService;
@@ -38,10 +40,12 @@ public class JwtAuFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwtToken;
         final String name;
+        log.info("jwt Au filter");
         if(authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
+        log.info("validate jwt token with current user");
         jwtToken = authHeader.substring(7);
         // todo extract the useremail from JWT Token
         name = jwtService.extractUsername(jwtToken);
