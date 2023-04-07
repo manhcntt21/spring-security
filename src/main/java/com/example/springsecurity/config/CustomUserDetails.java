@@ -1,18 +1,11 @@
 package com.example.springsecurity.config;
 
-import com.example.springsecurity.entities.Role;
 import com.example.springsecurity.entities.User;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -27,10 +20,6 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(User user) {
         name = user.getName();
         password = user.getPassword();
-//        for(Role role: user.getRoles()) {
-//            authorities.add(new SimpleGrantedAuthority(role.getName()));
-//        }
-//        authorities = user.getRoles();
         user.getRoles().forEach(r -> authorities.add(new SimpleGrantedAuthority(r.getName())));
     }
     @Override

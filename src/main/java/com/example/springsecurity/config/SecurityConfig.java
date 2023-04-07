@@ -2,9 +2,9 @@ package com.example.springsecurity.config;
 
 
 import com.example.springsecurity.filter.JwtAuFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,29 +26,32 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Order(2)
 public class SecurityConfig {
-    @Autowired
+
     private JwtAuFilter jwtAuFilter;
+
+    public SecurityConfig(JwtAuFilter jwtAuFilter) {
+        this.jwtAuFilter = jwtAuFilter;
+    }
+
     // todo : setup securityfilterchain thiết lập, yêu cầu đăng nhập và các path và role tương ứng
     // todo : setup user detail services : thiết lập đọc user/pass từ db
     @Bean
     public UserDetailsService userDetailsService() {
         return new CustomUserDetailService();
-
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authorize -> authorize.requestMatchers("/greetings", "/authenticate").permitAll())
-                .authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/v1/**").authenticated())
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuFilter, UsernamePasswordAuthenticationFilter.class);
-//                .and().httpBasic(Customizer.withDefaults());
-//                .and().formLogin();
+            // enable cors, disable cors
+            http.csrf(csrf -> csrf.disable()).cors().and()
+                    .authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/v1/**").authenticated())
+                    .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and()
+                    .authenticationProvider(authenticationProvider())
+                    .addFilterBefore(jwtAuFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -59,7 +62,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(userDetailsService());
         authenticationProvider.setPasswordEncoder(passwordEncoder());
         return authenticationProvider;
@@ -69,7 +72,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
-//    @Bean
-//    public Compress
 }

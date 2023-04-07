@@ -2,7 +2,9 @@ package com.example.springsecurity.controllers;
 
 import com.example.springsecurity.request.AuthRequest;
 import com.example.springsecurity.config.JwtService;
+import com.example.springsecurity.response.AuthResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,9 +20,14 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 public class AuthController {
-
+    /**
+     * initialized component was followed Spring IoC
+     */
     private JwtService jwtService;
 
+    /**
+     * authentication configured in SecurityConfig.class
+     */
     private AuthenticationManager authenticationManager;
 
     public AuthController(JwtService jwtService, AuthenticationManager authenticationManager) {
@@ -29,12 +36,14 @@ public class AuthController {
     }
 
     @PostMapping()
-    public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<?> authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
         log.info("authentication starting");
         Authentication authentication =  authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
         if(authentication.isAuthenticated()) {
-            return jwtService.generateToken(authRequest.getUsername());
+            return ResponseEntity.ok(new AuthResponse(
+                    jwtService.generateToken(authRequest.getUsername()),
+                    jwtService.generateRefreshToken(authRequest.getUsername())));
         } else {
             throw new UsernameNotFoundException("invalid user request!");
         }
