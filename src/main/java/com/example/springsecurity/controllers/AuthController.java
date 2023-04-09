@@ -1,5 +1,6 @@
 package com.example.springsecurity.controllers;
 
+import com.example.springsecurity.request.AuthRefresh;
 import com.example.springsecurity.request.AuthRequest;
 import com.example.springsecurity.config.JwtService;
 import com.example.springsecurity.response.AuthResponse;
@@ -47,5 +48,16 @@ public class AuthController {
         } else {
             throw new UsernameNotFoundException("invalid user request!");
         }
+    }
+
+    /**
+     * create a new access token
+     * @param authRefresh
+     * @return
+     */
+    @PostMapping("/refresh")
+    public String refresh(@RequestBody AuthRefresh authRefresh) {
+        log.info("refresh token starting ...");
+        return jwtService.generateNewAccessToken(authRefresh.getRefresh(), authRefresh.getUsername(),0);
     }
 }

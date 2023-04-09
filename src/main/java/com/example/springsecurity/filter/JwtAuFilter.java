@@ -60,10 +60,11 @@ public class JwtAuFilter extends OncePerRequestFilter {
 
         try {
             // todo extract the useremail from JWT Token
-            name = jwtService.extractUsername(jwtToken);
+            // 1 sử dụng cho access token
+            name = jwtService.extractUsername(jwtToken, 1);
             if( name != null && (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
                 UserDetails userDetails = customUserDetailService.loadUserByUsername(name);
-                if(jwtService.validateToken(jwtToken, userDetails)) {
+                if(jwtService.validateToken(jwtToken, userDetails, 1)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

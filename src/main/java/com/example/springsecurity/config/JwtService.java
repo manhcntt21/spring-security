@@ -27,7 +27,7 @@ public class JwtService {
 
     public static final Integer EXPIRE_DURATION = 1000 * 60 * 1; // 30 minutes
 
-    public static final Integer TOKEN_LIFETIME = 1000 * 60 * 1; // 30 minutes
+    public static final Integer TOKEN_LIFETIME = 1000 * 60 * 10; // 30 minutes
     // defaut header
     private JwsHeader getHeader() {
         JwsHeader header = new DefaultJwsHeader();
@@ -80,17 +80,18 @@ public class JwtService {
     }
 
     private String createToken(JwsHeader header, Claims claims) {
-        System.out.println(Keys.secretKeyFor(SignatureAlgorithm.HS256));
         return Jwts.builder()
                 .setHeader((Map<String, Object>)header) // header
-                .setPayload(claims.toString()) // payload
+//                .setPayload(claims.toString()) // payload
+                .setClaims(claims) // payload
                 .signWith(getSignKey(1), SignatureAlgorithm.HS256).compact(); // signature must be explicitly specified here
     }
 
     private String createRefreshToken(JwsHeader header, Claims claims) {
         return Jwts.builder()
                 .setHeader((Map<String, Object>)header) // header
-                .setPayload(claims.toString()) // payload
+//                .setPayload(claims.toString()) // payload
+                .setClaims(claims) // payload
                 .signWith(getSignKey(0), SignatureAlgorithm.HS384).compact(); // signature must be explicitly specified here
     }
 
@@ -108,32 +109,32 @@ public class JwtService {
     }
 
 
-    public String extractUsername(String jwtToken) {
-        return extractClaim(jwtToken, Claims::getSubject);
+    public String extractUsername(String jwtToken, int type) {
+        return extractClaim(jwtToken, Claims::getSubject, type);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver, int type) {
+        final Claims claims = extractAllClaims(token, type);
         return claimsResolver.apply(claims);
     }
 
 
     // phan tich token
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token,int type) {
         return Jwts
                 .parserBuilder()
-                .setSigningKey(getSignKey(1))
+                .setSigningKey(getSignKey(type))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+    private Boolean isTokenExpired(String token, int type) {
+        return extractExpiration(token, type).before(new Date());
     }
 
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public Date extractExpiration(String token, int type) {
+        return extractClaim(token, Claims::getExpiration, type);
     }
 
     /**
@@ -143,9 +144,26 @@ public class JwtService {
      * @param userDetails
      * @return
      */
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    public Boolean validateToken(String token, UserDetails userDetails, int type) {
+        final String username = extractUsername(token, type);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token, type));
+    }
+
+    public Boolean checkRefreshTokenExpired(String token, int type) {
+        return !isTokenExpired(token, type);
+    }
+
+    public String generateNewAccessToken(String token, String username, int type) {
+        try {
+            if(checkRefreshTokenExpired(token, type)) {
+                // nếu refresh còn hạn
+                return generateToken(username);
+            }
+        } catch (Exception e) {
+            log.error("invalid refresh token");
+//            e.printStackTrace();
+        }
+        return "invalid refresh token";
     }
 }
 

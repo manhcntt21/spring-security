@@ -32,7 +32,7 @@ public class BasicAuthentication {
                 .cors().and()
                 .authorizeHttpRequests(
                         authorize -> authorize.requestMatchers("/greetings/**").permitAll()
-                                .requestMatchers("/authenticate").authenticated()
+                                .requestMatchers("/authenticate/**").authenticated()
                                 .anyRequest().permitAll() // cho qua để còn chuyển sang cái security thứ 2
                 )
                 .httpBasic(Customizer.withDefaults());
