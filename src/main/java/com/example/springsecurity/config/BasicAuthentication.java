@@ -31,7 +31,7 @@ public class BasicAuthentication {
                 .csrf().disable()
                 .cors().and()
                 .authorizeHttpRequests(
-                        authorize -> authorize.requestMatchers("/greetings/**").permitAll()
+                        authorize -> authorize.requestMatchers("/greetings/**", "/cookie/**").permitAll()
                                 .requestMatchers("/authenticate/**").authenticated()
                                 .anyRequest().permitAll() // cho qua để còn chuyển sang cái security thứ 2
                 )
