@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/authenticate")
-
+@CrossOrigin("*")
 @Slf4j
 public class AuthController {
     /**
